@@ -9,8 +9,11 @@ import time
 from datetime import datetime
 from opencode_client import OpenCodeClient
 
-KNOWLEDGE_BASE = "/Users/liubangan/claude/context_yage/context-infrastructure/periodic_jobs/ai_heartbeat/docs/KNOWLEDGE_BASE.md"
-OBSERVATIONS_PATH = "/Users/liubangan/claude/context_yage/context-infrastructure/contexts/memory/OBSERVATIONS.md"
+KNOWLEDGE_BASE = "/path/to/your/workspace/periodic_jobs/ai_heartbeat/docs/KNOWLEDGE_BASE.md"
+OBSERVATIONS_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(KNOWLEDGE_BASE)))),
+    "contexts", "memory", "OBSERVATIONS.md"
+)
 
 PROMPT_TEMPLATE = """
 【目标】：执行观测记忆提取并直接持久化到磁盘。
@@ -38,8 +41,8 @@ def main():
     parser = argparse.ArgumentParser(description='L1 Observer Agent')
     parser.add_argument('date', nargs='?', default=datetime.now().strftime("%Y-%m-%d"),
                         help='Target date (YYYY-MM-DD)')
-    parser.add_argument('--model', default='opencode/qwen3.6-plus-free',
-                        choices=['opencode/qwen3.6-plus-free', 'opencode/big-pickle', 'opencode/minimax-m2.5-free'],
+    parser.add_argument('--model', default='<your-model-id>',
+                        choices=['<your-model-id>'],
                         help='Model ID to use')
     parser.add_argument('--no-delete', action='store_true',
                         help='Keep session after completion (default: delete)')
@@ -65,7 +68,7 @@ def main():
         return
         
     prompt = PROMPT_TEMPLATE.format(kb_path=KNOWLEDGE_BASE, target_date=target_date)
-    client.send_message(session_id, prompt, model_id=model_id, agent="build")
+    client.send_message(session_id, prompt, model_id=model_id)
     # If send_message timed out, agent may still be running; poll until done
     print("Waiting for session to complete (sync mode)...")
     client.wait_for_session_complete(session_id)
